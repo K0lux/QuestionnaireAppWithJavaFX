@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.transform.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.QuestionnaireController"
+      stylesheets="@application.css" spacing="20" alignment="CENTER">
+    
+    <VBox styleClass="header" alignment="CENTER">
+        <Label text="Questionnaire" styleClass="header-title"/>
+    </VBox>
+
+        <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="content-area">
+            <VBox fx:id="questionnaireBox" spacing="20">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+            </VBox>
+        </ScrollPane>
+
+
+    <HBox spacing="10" alignment="CENTER">
+    	<Label fx:id="progressLabel" text="Début du questionnaire" styleClass="progress-label"/>
+    	<ProgressBar fx:id="progressBar" styleClass="progress-bar"/>
+        <Button fx:id="previousButton" text="Précédent" onAction="#handlePrevious"/>
+        <Button fx:id="nextButton" text="Suivant" onAction="#handleNext"/>
+        <Button fx:id="submitButton" text="Soumettre" onAction="#handleSubmit"/>
+    </HBox>
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+</VBox>
