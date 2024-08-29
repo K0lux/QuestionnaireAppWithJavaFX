@@ -7,7 +7,7 @@
 <?import javafx.scene.transform.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.QuestionnaireController"
-      stylesheets="@application.css" spacing="20" alignment="CENTER">
+      stylesheets="@Styles.css" spacing="20" alignment="CENTER">
     
     <VBox styleClass="header" alignment="CENTER">
         <Label text="Questionnaire" styleClass="header-title"/>
@@ -23,12 +23,14 @@
 
 
     <HBox spacing="10" alignment="CENTER">
-    	<Label fx:id="progressLabel" text="Début du questionnaire" styleClass="progress-label"/>
     	<ProgressBar fx:id="progressBar" styleClass="progress-bar"/>
         <Button fx:id="previousButton" text="Précédent" onAction="#handlePrevious"/>
         <Button fx:id="nextButton" text="Suivant" onAction="#handleNext"/>
         <Button fx:id="submitButton" text="Soumettre" onAction="#handleSubmit"/>
     </HBox>
+        <ScrollPane fx:id="reviewScrollPane" visible="false" maxHeight="200">
+        <VBox fx:id="reviewBox" spacing="10"/>
+    </ScrollPane>
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>

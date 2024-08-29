@@ -13,15 +13,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.GridPane;
+import javafx.geometry.Insets;
+
 
 public class QuestionnaireController {
     @FXML private VBox questionnaireBox;
-    @FXML private Label progressLabel;
     @FXML private Button submitButton;
     @FXML private Button previousButton;
     @FXML private Button nextButton;
     @FXML private ProgressBar progressBar;
+    @FXML private ScrollPane reviewScrollPane;
+    @FXML private VBox reviewBox;
+    
 
     
 
@@ -30,6 +34,7 @@ public class QuestionnaireController {
     private List<Question> questions;
     private double progress = 0.0;
     private Map<Integer, String> responses = new HashMap<>();
+    private boolean isReviewing = false;
 
 
 
@@ -39,6 +44,7 @@ public class QuestionnaireController {
 
         updateButtonStates();
         updateProgressBar();
+        reviewScrollPane.setVisible(false);
     }
 
    
@@ -112,7 +118,8 @@ public class QuestionnaireController {
     private void updateButtonStates() {
         previousButton.setDisable(currentQuestionIndex == 0);
         nextButton.setDisable(currentQuestionIndex == questions.size() - 1);
-        submitButton.setVisible(currentQuestionIndex == questions.size() - 1);
+        submitButton.setVisible(currentQuestionIndex == questions.size() - 1 || isReviewing);
+        
     }
 
     @FXML
@@ -135,35 +142,6 @@ public class QuestionnaireController {
             progress = (double) currentQuestionIndex / (questions.size() - 1); // Calculer la progression en fonction de l'index
             updateProgressBar();
         }
-    }
-
-    @FXML
-    private void handleSubmit() {
-    	saveCurrentResponse(); 
-        String responses = collectResponses();
-        
-        System.out.println("Collected Responses:\n" + responses);
-        
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Questionnaire Soumis");
-        alert.setHeaderText("Responses Collectées");
-        alert.setContentText(responses);
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        alert.showAndWait();
-        
-        
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Confirmation de soumission");
-        confirmAlert.setHeaderText("Êtes-vous sûr de vouloir soumettre le questionnaire ?");
-        confirmAlert.setContentText("Assurez-vous d'avoir répondu à toutes les questions.");
-
-        Optional<ButtonType> result = confirmAlert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            String responses1 = collectResponses();
-            showSummary(responses1);
-        }
-
-        // connexion avec la base de donnée 
     }
 
     private void saveCurrentResponse() {
@@ -193,7 +171,7 @@ public class QuestionnaireController {
             allResponses.append(response).append("\n\n");
         }
 
-       // return responses.toString();
+       
         return allResponses.toString();  
     }
 
@@ -232,11 +210,7 @@ public class QuestionnaireController {
         }
         return "Pas de réponse";
     }
-    
-    
-    
-    
-   
+  
     private void animateQuestionTransition(Node node) {
         TranslateTransition tt = new TranslateTransition(Duration.millis(300), node);
         tt.setFromX(300);
@@ -246,12 +220,72 @@ public class QuestionnaireController {
 
 
     private void updateProgressBar() {
-    	progressBar.setProgress(progress);
-    }
+    	   double progress = (double) (currentQuestionIndex) / (questions.size() - 1);;
+           progressBar.setProgress(progress);
+       }
 
     private void updateSubmitButtonVisibility() {
         submitButton.setVisible(currentQuestionIndex == questions.size() - 1);
     }
+    private void resetQuestions() {
+        for (Question question : questions) {
+            question.clearResponse(); 
+        }
+        currentQuestionIndex = 0; 
+        renderQuestion(currentQuestionIndex);
+        updateProgressBar();
+        updateButtonStates(); 
+    }
+    
+    @FXML
+    private void handleSubmit() {
+        saveCurrentResponse();
+        showReviewDialog();
+    }
+
+    private void showReviewDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Révision des réponses");
+        dialog.setHeaderText("Veuillez vérifier vos réponses. Cliquez sur une réponse pour la modifier.");
+
+        ButtonType submitButtonType = new ButtonType("Soumettre", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(submitButtonType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        for (int i = 0; i < questions.size(); i++) {
+            Question question = questions.get(i);
+            String response = responses.getOrDefault(i, "Pas de réponse");
+
+            Label questionLabel = new Label(question.getQuestionText());
+            Label responseLabel = new Label(response);
+            responseLabel.setStyle("-fx-underline: true;");
+
+            final int index = i;
+            responseLabel.setOnMouseClicked(event -> {
+                dialog.hide();
+                currentQuestionIndex = index;
+                renderQuestion(currentQuestionIndex);
+                updateProgressBar();
+            });
+
+            grid.add(questionLabel, 0, i);
+            grid.add(responseLabel, 1, i);
+        }
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == submitButtonType) {
+            String responses = collectResponses();
+            showSummary(responses);
+            // Connexion avec la base de données ici
+        }
+    }
+    
     
     private void showSummary(String responses) {
         Alert summaryAlert = new Alert(Alert.AlertType.INFORMATION);
@@ -268,7 +302,6 @@ public class QuestionnaireController {
         summaryAlert.getDialogPane().setExpanded(true);
 
         summaryAlert.showAndWait();
-
-        
+        resetQuestions();
     }
 }
